@@ -1,0 +1,5 @@
+ALTER TABLE tb_livro
+    ADD COLUMN IF NOT EXISTS categoria_id BIGINT REFERENCES tb_categoria (id),
+    ADD COLUMN IF NOT EXISTS descricao VARCHAR(1000),
+    ADD COLUMN IF NOT EXISTS ano_publicacao INTEGER,
+    ADD COLUMN IF NOT EXISTS url_arquivo VARCHAR(500);

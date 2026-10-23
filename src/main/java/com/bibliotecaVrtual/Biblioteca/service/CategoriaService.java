@@ -2,6 +2,7 @@ package com.bibliotecaVrtual.Biblioteca.service;
 
 import com.bibliotecaVrtual.Biblioteca.dto.CategoriaDTO.CategoriaRequestDTO;
 import com.bibliotecaVrtual.Biblioteca.dto.CategoriaDTO.CategoriaResponseDTO;
+import com.bibliotecaVrtual.Biblioteca.mapper.CategoriaMapper;
 import com.bibliotecaVrtual.Biblioteca.model.CategoriaModel;
 import com.bibliotecaVrtual.Biblioteca.repository.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,21 +19,24 @@ import java.util.List;
 public class CategoriaService {
     private final CategoriaRepository categoriaRepository;
 
+    private final CategoriaMapper categoriaMapper;
+
     public CategoriaResponseDTO cadastrar(CategoriaRequestDTO dto) {
         String nome = normalizarNome(dto.getNome());
         validarNomeUnico(nome, null);
-        CategoriaModel categoria = new CategoriaModel(null, nome);
-        return paraResponse(categoriaRepository.save(categoria));
+        CategoriaModel categoria = categoriaMapper.toModel(dto);
+        categoria.setNome(nome);
+        return categoriaMapper.toDTO(categoriaRepository.save(categoria));
     }
 
     @Transactional(readOnly = true)
     public List<CategoriaResponseDTO> listarTodas() {
-        return categoriaRepository.findAll().stream().map(this::paraResponse).toList();
+        return categoriaRepository.findAll().stream().map(categoriaMapper::toDTO).toList();
     }
 
     @Transactional(readOnly = true)
     public CategoriaResponseDTO buscarPorId(Long id) {
-        return paraResponse(buscarOuErro(id));
+        return categoriaMapper.toDTO(buscarOuErro(id));
     }
 
     public CategoriaResponseDTO atualizar(Long id, CategoriaRequestDTO dto) {
@@ -40,7 +44,7 @@ public class CategoriaService {
         String nome = normalizarNome(dto.getNome());
         validarNomeUnico(nome, id);
         categoria.setNome(nome);
-        return paraResponse(categoriaRepository.save(categoria));
+        return categoriaMapper.toDTO(categoriaRepository.save(categoria));
     }
 
     public void excluir(Long id) {
@@ -64,9 +68,5 @@ public class CategoriaService {
 
     private String normalizarNome(String nome) {
         return nome.trim().replaceAll("\s+", " ");
-    }
-
-    private CategoriaResponseDTO paraResponse(CategoriaModel categoria) {
-        return new CategoriaResponseDTO(categoria.getId(), categoria.getNome());
     }
 }

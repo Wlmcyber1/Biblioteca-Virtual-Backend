@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS tb_livro (
+    id BIGSERIAL PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(255) NOT NULL
+);
