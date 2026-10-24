@@ -1,12 +1,13 @@
 # Biblioteca Virtual — Backend
 
-API REST para cadastro de livros, feita com **Spring Boot** e **PostgreSQL**.
+API REST para cadastro de livros e categorias, feita com **Spring Boot** e **PostgreSQL**.
 
 ## Tecnologias
 
 - Java 17
 - Spring Boot 4.1 (Web MVC, Data JPA, Validation, Security)
 - PostgreSQL 16
+- Flyway (migrações versionadas do banco)
 - Lombok
 - MapStruct (conversão entre Model e DTO)
 - Docker e Docker Compose
@@ -16,12 +17,12 @@ API REST para cadastro de livros, feita com **Spring Boot** e **PostgreSQL**.
 ```
 src/main/java/com/bibliotecaVrtual/Biblioteca
 ├── config/        SecurityConfig: libera os endpoints e desliga o CSRF
-├── controller/    LivroController: endpoints REST em /livros
-├── dto/LivroDTO/  LivroRequestDTO (entrada) e LivroResponseDTO (saída)
+├── controller/    LivroController (/livros) e CategoriaController (/categorias)
+├── dto/           DTOs de entrada e saída de Livro e Categoria
 ├── mapper/        LivroMapper (MapStruct)
-├── model/         LivroModel: entidade JPA (tabela tb_livro)
-├── repository/    LivroRepository (JpaRepository)
-└── service/       LivroService: regras de negócio
+├── model/         LivroModel e CategoriaModel
+├── repository/    Repositórios JPA de Livro e Categoria
+└── service/       Regras de negócio de Livro e Categoria
 ```
 
 ## Endpoints
@@ -61,6 +62,28 @@ URL base: `http://localhost:8080/livros`
 - No **POST** e no **PUT**, `titulo` e `autor` são obrigatórios (`@NotBlank`). Se faltar algum, a API responde **400 Bad Request**.
 - No **PATCH**, os campos são opcionais: só o que vier preenchido é alterado.
 - Se o id não existir (GET por id, PUT, PATCH e DELETE), a API responde **404 Not Found** com a mensagem "Livro não encontrado".
+
+## CRUD de categorias
+
+URL base: `http://localhost:8080/categorias`
+
+| Método | Rota | Descrição | Sucesso |
+|---|---|---|---|
+| POST | `/categorias` | Cadastra categoria | `201 Created` |
+| GET | `/categorias` | Lista categorias | `200 OK` |
+| GET | `/categorias/{id}` | Busca por ID | `200 OK` |
+| PUT | `/categorias/{id}` | Altera o nome | `200 OK` |
+| DELETE | `/categorias/{id}` | Exclui categoria | `204 No Content` |
+
+Corpo do POST/PUT:
+
+```json
+{
+  "nome": "Literatura"
+}
+```
+
+Regras: o nome é obrigatório, tem limite de 100 caracteres e é normalizado removendo espaços extras. Nomes repetidos, ignorando maiúsculas/minúsculas, retornam `409 Conflict`; IDs inexistentes retornam `404 Not Found`. A migration `V1__create_tb_categoria.sql` cria a tabela e o índice único case-insensitive.
 
 ## Como rodar
 
@@ -102,6 +125,6 @@ Por enquanto, todos os endpoints estão liberados, sem login, e o CSRF está des
 
 ## Próximos passos
 
-- Adicionar categoria ao livro (já há um campo comentado no model e no DTO)
+- Relacionar livros/materiais às categorias
 - Implementar autenticação
 - Escrever testes para o service e o controller
