@@ -5,13 +5,20 @@ import com.bibliotecaVrtual.Biblioteca.dto.LivroDTO.LivroResponseDTO;
 import com.bibliotecaVrtual.Biblioteca.mapper.LivroMapper;
 import com.bibliotecaVrtual.Biblioteca.model.CategoriaModel;
 import com.bibliotecaVrtual.Biblioteca.model.LivroModel;
+import com.bibliotecaVrtual.Biblioteca.model.TurmaModel;
 import com.bibliotecaVrtual.Biblioteca.repository.CategoriaRepository;
 import com.bibliotecaVrtual.Biblioteca.repository.LivroRepository;
+import com.bibliotecaVrtual.Biblioteca.repository.TurmaRepository;
+import com.bibliotecaVrtual.Biblioteca.repository.specification.LivroSpecification;
+import com.bibliotecaVrtual.Biblioteca.repository.specification.TurmaSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -19,6 +26,8 @@ import java.util.List;
 public class LivroService {
 
     private final LivroRepository livroRepository;
+
+    private final TurmaRepository turmaRepository;
 
     private final LivroMapper livroMapper;
 
@@ -50,6 +59,41 @@ public class LivroService {
         LivroModel livro = buscarLivroOuErro(id);
 
         return livroMapper.toDTO(livro);
+    }
+
+    //busca avançada: junta com AND só os filtros que vieram preenchidos
+    public List<LivroResponseDTO> buscaAvancada(String titulo, String autor, Long categoriaId,
+                                                Long editoraId, Integer anoMin, Integer anoMax) {
+        if (anoMin != null && anoMax != null && anoMin > anoMax) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "anoMin não pode ser maior que anoMax");
+        }
+        Specification<LivroModel> filtros = Specification.allOf(
+                LivroSpecification.tituloContem(titulo),
+                LivroSpecification.autorContem(autor),
+                LivroSpecification.daCategoria(categoriaId),
+                LivroSpecification.daEditora(editoraId),
+                LivroSpecification.anoMinimo(anoMin),
+                LivroSpecification.anoMaximo(anoMax));
+
+        return livroRepository.findAll(filtros, Sort.by("titulo")).stream()
+                .map(livroMapper::toDTO).toList();
+    }
+
+    //livros recomendados: acha as turmas que batem com os filtros e junta os livros delas, sem repetir
+    public List<LivroResponseDTO> buscarRecomendados(Long turmaId, Integer serie, String letra,
+                                                     Integer anoLetivo, String professor) {
+        Specification<TurmaModel> filtros = Specification.allOf(
+                TurmaSpecification.comId(turmaId),
+                TurmaSpecification.daSerie(serie),
+                TurmaSpecification.daLetra(letra),
+                TurmaSpecification.doAnoLetivo(anoLetivo),
+                TurmaSpecification.professorContem(professor));
+
+        return turmaRepository.findAll(filtros).stream()
+                .flatMap(turma -> turma.getLivros().stream())
+                .distinct() //o mesmo livro pode ter sido recomendado em mais de uma turma
+                .sorted(Comparator.comparing(LivroModel::getTitulo))
+                .map(livroMapper::toDTO).toList();
     }
 
     //delete
