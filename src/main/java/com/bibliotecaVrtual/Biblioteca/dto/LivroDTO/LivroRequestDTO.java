@@ -24,6 +24,8 @@ public class LivroRequestDTO{
     @NotNull(message = "A categoria é obrigatória")
     private Long categoriaId;
 
+    private Long editoraId;
+
     @Size(max = 1000, message = "A descrição deve ter no máximo 1000 caracteres")
     private String descricao;
 

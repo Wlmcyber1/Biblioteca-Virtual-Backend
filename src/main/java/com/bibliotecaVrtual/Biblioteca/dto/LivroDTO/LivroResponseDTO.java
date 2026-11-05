@@ -1,6 +1,7 @@
 package com.bibliotecaVrtual.Biblioteca.dto.LivroDTO;
 
 import com.bibliotecaVrtual.Biblioteca.dto.CategoriaDTO.CategoriaResponseDTO;
+import com.bibliotecaVrtual.Biblioteca.dto.EditoraDTO.EditoraResponseDTO;
 import lombok.*;
 
 @Getter
@@ -13,6 +14,7 @@ public class LivroResponseDTO {
     private String titulo;
     private String autor;
     private CategoriaResponseDTO categoria;
+    private EditoraResponseDTO editora;
     private String descricao;
     private Integer anoPublicacao;
     private String urlArquivo;
