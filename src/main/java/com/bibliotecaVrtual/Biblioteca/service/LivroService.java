@@ -4,8 +4,10 @@ import com.bibliotecaVrtual.Biblioteca.dto.LivroDTO.LivroRequestDTO;
 import com.bibliotecaVrtual.Biblioteca.dto.LivroDTO.LivroResponseDTO;
 import com.bibliotecaVrtual.Biblioteca.mapper.LivroMapper;
 import com.bibliotecaVrtual.Biblioteca.model.CategoriaModel;
+import com.bibliotecaVrtual.Biblioteca.model.EditoraModel;
 import com.bibliotecaVrtual.Biblioteca.model.LivroModel;
 import com.bibliotecaVrtual.Biblioteca.repository.CategoriaRepository;
+import com.bibliotecaVrtual.Biblioteca.repository.EditoraRepository;
 import com.bibliotecaVrtual.Biblioteca.repository.LivroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,11 +26,14 @@ public class LivroService {
 
     private final CategoriaRepository categoriaRepository;
 
+    private final EditoraRepository editoraRepository;
+
     //POST
     public LivroResponseDTO cadastrarLivro (LivroRequestDTO livroRecebido){
         //transformar em model o dto
         LivroModel livro = livroMapper.toModel(livroRecebido);
         livro.setCategoria(buscarCategoriaOuErro(livroRecebido.getCategoriaId()));
+        livro.setEditora(buscarEditoraOuNulo(livroRecebido.getEditoraId()));
 
         // e salvar no banco de dados
         LivroModel livroSalvo = livroRepository.save(livro);
@@ -70,6 +75,7 @@ public class LivroService {
         livroExistente.setTitulo(dto.getTitulo());
         livroExistente.setAutor(dto.getAutor());
         livroExistente.setCategoria(buscarCategoriaOuErro(dto.getCategoriaId()));
+        livroExistente.setEditora(buscarEditoraOuNulo(dto.getEditoraId()));
         livroExistente.setDescricao(dto.getDescricao());
         livroExistente.setAnoPublicacao(dto.getAnoPublicacao());
         livroExistente.setUrlArquivo(dto.getUrlArquivo());
@@ -98,6 +104,10 @@ public class LivroService {
            livroExistente.setCategoria(buscarCategoriaOuErro(dto.getCategoriaId()));
        }
 
+       if(dto.getEditoraId()!=null){
+           livroExistente.setEditora(buscarEditoraOuNulo(dto.getEditoraId()));
+       }
+
        if(dto.getDescricao()!=null){
            livroExistente.setDescricao(dto.getDescricao());
        }
@@ -124,6 +134,15 @@ public class LivroService {
     private CategoriaModel buscarCategoriaOuErro(Long categoriaId){
         return categoriaRepository.findById(categoriaId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+    }
+
+    //busca a editora pelo id ou devolve 404; sem id, o livro fica sem editora
+    private EditoraModel buscarEditoraOuNulo(Long editoraId){
+        if(editoraId == null){
+            return null;
+        }
+        return editoraRepository.findById(editoraId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Editora não encontrada"));
     }
 
     private ResponseStatusException livroNaoEncontrado(){

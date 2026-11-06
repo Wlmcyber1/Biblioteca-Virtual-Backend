@@ -6,12 +6,13 @@ import com.bibliotecaVrtual.Biblioteca.model.LivroModel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = CategoriaMapper.class)
+@Mapper(componentModel = "spring", uses = {CategoriaMapper.class, EditoraMapper.class})
 public interface LivroMapper {
 
-    //transforma dto em model (a categoria é buscada pelo id no service)
+    //transforma dto em model (a categoria e a editora são buscadas pelo id no service)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "categoria", ignore = true)
+    @Mapping(target = "editora", ignore = true)
     LivroModel toModel(LivroRequestDTO dto);
 
     //transforma model pra dto
