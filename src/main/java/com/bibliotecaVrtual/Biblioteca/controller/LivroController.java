@@ -31,6 +31,27 @@ public class LivroController {
         return livroService.mostrarTodosLivros();
     }
 
+    //busca avançada: todos os filtros são opcionais e podem ser combinados
+    @GetMapping("/busca")
+    public List<LivroResponseDTO> buscaAvancada(@RequestParam(required = false) String titulo,
+                                                @RequestParam(required = false) String autor,
+                                                @RequestParam(required = false) Long categoriaId,
+                                                @RequestParam(required = false) Long editoraId,
+                                                @RequestParam(required = false) Integer anoMin,
+                                                @RequestParam(required = false) Integer anoMax) {
+        return livroService.buscaAvancada(titulo, autor, categoriaId, editoraId, anoMin, anoMax);
+    }
+
+    //aluno consulta os livros recomendados pela turma ou pelo nome do professor
+    @GetMapping("/recomendados")
+    public List<LivroResponseDTO> recomendados(@RequestParam(required = false) Long turmaId,
+                                               @RequestParam(required = false) Integer serie,
+                                               @RequestParam(required = false) String letra,
+                                               @RequestParam(required = false) Integer anoLetivo,
+                                               @RequestParam(required = false) String professor) {
+        return livroService.buscarRecomendados(turmaId, serie, letra, anoLetivo, professor);
+    }
+
     @GetMapping("/{id}")
     public LivroResponseDTO buscarPorId(@PathVariable Long id){
         return livroService.buscarId(id);
