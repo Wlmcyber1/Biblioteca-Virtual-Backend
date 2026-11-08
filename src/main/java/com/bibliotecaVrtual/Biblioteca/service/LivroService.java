@@ -3,10 +3,12 @@ package com.bibliotecaVrtual.Biblioteca.service;
 import com.bibliotecaVrtual.Biblioteca.dto.LivroDTO.LivroRequestDTO;
 import com.bibliotecaVrtual.Biblioteca.dto.LivroDTO.LivroResponseDTO;
 import com.bibliotecaVrtual.Biblioteca.mapper.LivroMapper;
+import com.bibliotecaVrtual.Biblioteca.model.AutorModel;
 import com.bibliotecaVrtual.Biblioteca.model.CategoriaModel;
 import com.bibliotecaVrtual.Biblioteca.model.EditoraModel;
 import com.bibliotecaVrtual.Biblioteca.model.LivroModel;
 import com.bibliotecaVrtual.Biblioteca.model.TurmaModel;
+import com.bibliotecaVrtual.Biblioteca.repository.AutorRepository;
 import com.bibliotecaVrtual.Biblioteca.repository.CategoriaRepository;
 import com.bibliotecaVrtual.Biblioteca.repository.EditoraRepository;
 import com.bibliotecaVrtual.Biblioteca.repository.LivroRepository;
@@ -20,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -37,12 +40,15 @@ public class LivroService {
 
     private final EditoraRepository editoraRepository;
 
+    private final AutorRepository autorRepository;
+
     //POST
     public LivroResponseDTO cadastrarLivro (LivroRequestDTO livroRecebido){
         //transformar em model o dto
         LivroModel livro = livroMapper.toModel(livroRecebido);
         livro.setCategoria(buscarCategoriaOuErro(livroRecebido.getCategoriaId()));
         livro.setEditora(buscarEditoraOuNulo(livroRecebido.getEditoraId()));
+        livro.setAutores(buscarAutoresOuErro(livroRecebido.getAutorIds()));
 
         // e salvar no banco de dados
         LivroModel livroSalvo = livroRepository.save(livro);
@@ -117,7 +123,7 @@ public class LivroService {
         LivroModel livroExistente = buscarLivroOuErro(id);
 
         livroExistente.setTitulo(dto.getTitulo());
-        livroExistente.setAutor(dto.getAutor());
+        livroExistente.setAutores(buscarAutoresOuErro(dto.getAutorIds()));
         livroExistente.setCategoria(buscarCategoriaOuErro(dto.getCategoriaId()));
         livroExistente.setEditora(buscarEditoraOuNulo(dto.getEditoraId()));
         livroExistente.setDescricao(dto.getDescricao());
@@ -140,8 +146,12 @@ public class LivroService {
            livroExistente.setTitulo(dto.getTitulo());
        }
 
-       if(dto.getAutor()!=null){
-           livroExistente.setAutor(dto.getAutor());
+       //só troca os autores se a lista vier; lista vazia ou com id nulo é recusada (no PATCH não tem @Valid)
+       if(dto.getAutorIds()!=null){
+           if(dto.getAutorIds().isEmpty() || dto.getAutorIds().contains(null)){
+               throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe pelo menos um autor, sem ids nulos");
+           }
+           livroExistente.setAutores(buscarAutoresOuErro(dto.getAutorIds()));
        }
 
        if(dto.getCategoriaId()!=null){
@@ -187,6 +197,18 @@ public class LivroService {
         }
         return editoraRepository.findById(editoraId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Editora não encontrada"));
+    }
+
+    //busca os autores pelos ids ou devolve 404 se algum não existir; ids repetidos são ignorados
+    private List<AutorModel> buscarAutoresOuErro(List<Long> autorIds){
+        List<Long> idsSemRepetir = autorIds.stream().distinct().toList();
+
+        List<AutorModel> autores = autorRepository.findAllById(idsSemRepetir);
+
+        if(autores.size() != idsSemRepetir.size()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor não encontrado");
+        }
+        return new ArrayList<>(autores);
     }
 
     private ResponseStatusException livroNaoEncontrado(){

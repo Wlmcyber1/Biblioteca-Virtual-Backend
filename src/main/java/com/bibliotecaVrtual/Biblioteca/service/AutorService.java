@@ -42,8 +42,6 @@ public class AutorService {
     }
 
     //DELETE
-    //nenhuma tabela aponta para tb_autor ainda (no livro, o autor é texto), então a exclusão sempre passa;
-    //quando existir a ligação Livro ↔ Autor, o banco vai rejeitar autor com livros e o GlobalExceptionHandler devolve 409
     public void deletarPorId(Long id) {
         if (!autorRepository.existsById(id)) {
             throw autorNaoEncontrado();

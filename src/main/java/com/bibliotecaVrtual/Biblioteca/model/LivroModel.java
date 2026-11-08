@@ -4,6 +4,9 @@ package com.bibliotecaVrtual.Biblioteca.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -18,8 +21,13 @@ public class LivroModel {
     @Column(nullable = false) //equivale a not null
     private String titulo;
 
-    @Column (nullable = false)
-    private String autor;
+    @ManyToMany //um livro pode ter vários autores, e um autor pode ter vários livros
+    @JoinTable(
+            name = "tb_livro_autor",
+            joinColumns = @JoinColumn(name = "livro_id"),
+            inverseJoinColumns = @JoinColumn(name = "autor_id")
+    )
+    private List<AutorModel> autores = new ArrayList<>();
 
     @ManyToOne(optional = false) //muitos livros pertencem a uma categoria
     @JoinColumn(name = "categoria_id", nullable = false)
