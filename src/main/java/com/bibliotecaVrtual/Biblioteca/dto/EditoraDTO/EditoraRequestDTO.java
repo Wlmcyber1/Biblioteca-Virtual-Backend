@@ -18,6 +18,8 @@ public class EditoraRequestDTO {
     //aceita 00.000.000/0000-00 ou 00000000000000
     public static final String CNPJ_REGEX = "^\\d{2}\\.?\\d{3}\\.?\\d{3}/?\\d{4}-?\\d{2}$";
     public static final String EMAIL_REGEX = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
+    //aceita (11) 91234-5678, (11) 1234-5678, 11912345678 ou 1112345678
+    public static final String TELEFONE_REGEX = "^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$";
 
     @NotBlank(message = "O nome é obrigatório")
     @Size(max = 150, message = "O nome deve ter no máximo 150 caracteres")
@@ -29,4 +31,7 @@ public class EditoraRequestDTO {
     @Size(max = 150, message = "O e-mail deve ter no máximo 150 caracteres")
     @Pattern(regexp = EMAIL_REGEX, message = "E-mail inválido")
     private String email;
+
+    @Pattern(regexp = TELEFONE_REGEX, message = "Telefone inválido. Use o formato (11) 91234-5678")
+    private String telefone;
 }

@@ -22,4 +22,7 @@ public class EditoraModel {
 
     @Column(length = 150)
     private String email;
+
+    @Column(length = 20)
+    private String telefone;
 }

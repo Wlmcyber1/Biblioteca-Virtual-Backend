@@ -12,4 +12,5 @@ public class EditoraResponseDTO {
     private String nome;
     private String cnpj;
     private String email;
+    private String telefone;
 }
