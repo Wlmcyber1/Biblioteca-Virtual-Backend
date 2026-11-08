@@ -3,6 +3,8 @@ package com.bibliotecaVrtual.Biblioteca.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @Entity
@@ -19,4 +21,9 @@ public class AutorModel {
 
     @Column(length = 100)
     private String nacionalidade;
+
+    private LocalDate dataNascimento;
+
+    @Column(length = 1000)
+    private String biografia;
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -57,6 +58,8 @@ public class AutorService {
 
         autorExistente.setNome(dto.getNome());
         autorExistente.setNacionalidade(dto.getNacionalidade());
+        autorExistente.setDataNascimento(dto.getDataNascimento());
+        autorExistente.setBiografia(dto.getBiografia());
 
         return autorMapper.toDTO(autorRepository.save(autorExistente));
     }
@@ -78,6 +81,20 @@ public class AutorService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A nacionalidade deve ter no máximo 100 caracteres");
             }
             autorExistente.setNacionalidade(dto.getNacionalidade());
+        }
+
+        if (dto.getDataNascimento() != null) {
+            if (!dto.getDataNascimento().isBefore(LocalDate.now())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A data de nascimento deve ser no passado");
+            }
+            autorExistente.setDataNascimento(dto.getDataNascimento());
+        }
+
+        if (dto.getBiografia() != null) {
+            if (dto.getBiografia().length() > 1000) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A biografia deve ter no máximo 1000 caracteres");
+            }
+            autorExistente.setBiografia(dto.getBiografia());
         }
 
         return autorMapper.toDTO(autorRepository.save(autorExistente));
