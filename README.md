@@ -74,24 +74,24 @@ Caminho de uma requisição: **Controller → Service → Repository → Banco**
 
 ```
 tb_categoria 1 ───< N tb_livro N >─── 0..1 tb_editora
-                         │
-                         N
-                         │
-                  tb_turma_livro      (N:N — livros recomendados)
-                         │
-                         N
-                         │
+                      │      │
+                      N      N
+                      │      │
+          tb_livro_autor    tb_turma_livro   (N:N — livros recomendados)
+           (N:N)             │
+                      N      N
+                      │      │
+                  tb_autor   │
+                             │
 tb_usuario (PROFESSOR) 1 ───< N tb_turma
-
-tb_autor   (cadastro independente; no livro, o autor é um texto)
 ```
 
 | Entidade | Atributos | Observações |
 |---|---|---|
-| **Categoria** | `id`, `nome` | Nome único, sem diferenciar maiúsculas de minúsculas |
-| **Livro** | `id`, `titulo`, `autor`, `categoria`, `editora`, `descricao`, `anoPublicacao`, `urlArquivo` | Categoria **obrigatória**; editora **opcional** |
-| **Autor** | `id`, `nome`, `nacionalidade` | Ver [Decisões de projeto](#decisões-de-projeto) |
-| **Editora** | `id`, `nome`, `cnpj`, `email` | CNPJ e e-mail validados por formato |
+| **Categoria** | `id`, `nome` | Nome único, sem diferenciar maiúsculas de minúsculas. Tem só um atributo de propósito: ver [Decisões de projeto](#decisões-de-projeto) |
+| **Livro** | `id`, `titulo`, `autores`, `categoria`, `editora`, `descricao`, `anoPublicacao`, `urlArquivo` | Pelo menos **um autor**; categoria **obrigatória**; editora **opcional** |
+| **Autor** | `id`, `nome`, `nacionalidade`, `dataNascimento`, `biografia` | Data de nascimento precisa ser no passado; biografia até 1000 caracteres |
+| **Editora** | `id`, `nome`, `cnpj`, `email`, `telefone` | CNPJ, e-mail e telefone validados por formato |
 | **Usuário** | `id`, `nome`, `email`, `matricula`, `perfil`, `ativo`, `dataCadastro` | Perfil: `BIBLIOTECARIO`, `PROFESSOR` ou `ESTUDANTE`; e-mail e matrícula únicos |
 | **Turma** | `id`, `serie`, `letra`, `anoLetivo`, `professor`, `livros` | Série de 1 a 3; série + letra + ano é único; o professor precisa ter perfil `PROFESSOR` |
 
@@ -127,7 +127,7 @@ Todos os recursos seguem o mesmo padrão:
 ```json
 {
   "titulo": "Dom Casmurro",
-  "autor": "Machado de Assis",
+  "autorIds": [1],
   "categoriaId": 1,
   "editoraId": 2,
   "descricao": "Romance narrado por Bentinho.",
@@ -162,7 +162,18 @@ Todos os recursos seguem o mesmo padrão:
 {
   "nome": "Editora Exemplo",
   "cnpj": "12.345.678/0001-90",
-  "email": "contato@exemplo.com"
+  "email": "contato@exemplo.com",
+  "telefone": "(11) 91234-5678"
+}
+```
+
+**Autor**
+```json
+{
+  "nome": "Machado de Assis",
+  "nacionalidade": "Brasileira",
+  "dataNascimento": "1839-06-21",
+  "biografia": "Fundador da Academia Brasileira de Letras."
 }
 ```
 
@@ -177,7 +188,7 @@ Todos os filtros são **opcionais** e se combinam com **E**. Os que não forem e
 | Parâmetro | Tipo | Como filtra |
 |---|---|---|
 | `titulo` | texto | Parte do título, sem diferenciar maiúsculas de minúsculas |
-| `autor` | texto | Parte do nome do autor |
+| `autor` | texto | Parte do nome de **qualquer um** dos autores do livro. O livro aparece uma vez só, mesmo que dois autores batam |
 | `categoriaId` | número | Categoria exata |
 | `editoraId` | número | Editora exata |
 | `anoMin` / `anoMax` | número | Faixa de ano de publicação (`anoMin` > `anoMax` → `400`) |
@@ -243,8 +254,9 @@ O banco é criado e alterado **só pelas migrations**. O Hibernate roda com `ddl
 | V9 | Cria `tb_turma` e `tb_turma_livro` (N:N) |
 | V10 | Liga o livro à editora (opcional) |
 | V11 | Impede excluir editora que tem livros (mesmo padrão da categoria) |
-
-> Uma migration que já rodou **não é editada**: o Flyway guarda o checksum dela e a aplicação não sobe se o arquivo mudar. Correções viram uma migration nova, como a V6 e a V11.
+| V12 | Adiciona `telefone` na editora |
+| V13 | Adiciona `data_nascimento` e `biografia` no autor |
+| V14 | Cria `tb_livro_autor` (N:N), converte o autor em texto dos livros antigos em registros de `tb_autor` e remove a coluna `autor` do livro |
 
 ---
 
@@ -282,7 +294,8 @@ As migrations rodam sozinhas quando a aplicação sobe.
 - **Sem login/JWT.** O enunciado não exige autenticação, então todos os endpoints são abertos. Regras como "só professor recomenda livro" são garantidas pela regra de negócio (o usuário da turma precisa ter perfil `PROFESSOR`), não por login.
 - **Perfil do usuário é `enum`**, porque é uma lista fixa (`BIBLIOTECARIO`, `PROFESSOR`, `ESTUDANTE`) e não precisa de tabela própria.
 - **Categoria obrigatória e editora opcional** no livro. Nos dois casos, o banco **bloqueia** excluir um registro que ainda tem livros, e a API responde `409`.
-- **Autor no livro ainda é texto.** O CRUD de Autor existe, mas a ligação Livro ↔ Autor (N:N) ainda não foi feita (ver [Próximos passos](#próximos-passos)).
+- **Livro ↔ Autor é N:N.** Um livro pode ter vários autores e um autor pode ter vários livros. A migration V14 converteu o autor em texto dos livros já cadastrados, sem perder dados.
+- **Categoria tem só o atributo `nome`.** Ela é uma classificação simples, usada para organizar o acervo e como filtro na busca. Atributos extras (descrição, ícone, ordem) não seriam usados em nenhuma regra da aplicação, por isso optamos por mantê-la enxuta.
 - **Uma turma tem um professor**, e é ele quem recomenda os livros daquela turma.
 - **MapStruct** como padrão para converter Model ↔ DTO em todas as entidades.
 
@@ -319,6 +332,5 @@ A IA não substituiu a nossa revisão. Dois exemplos deste projeto:
 
 ## Próximos passos
 
-- Ligar Livro ↔ Autor (N:N) usando a tabela `tb_autor`, no lugar do autor em texto
 - Registrar acessos/leituras dos alunos e montar um ranking dos livros mais acessados
 - Escrever testes automatizados para os services e controllers
