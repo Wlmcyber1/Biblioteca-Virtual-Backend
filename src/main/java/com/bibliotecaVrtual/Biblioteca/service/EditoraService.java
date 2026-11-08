@@ -55,6 +55,7 @@ public class EditoraService {
         existente.setNome(dto.getNome());
         existente.setCnpj(dto.getCnpj());
         existente.setEmail(dto.getEmail());
+        existente.setTelefone(dto.getTelefone());
 
         return editoraMapper.toDTO(editoraRepository.save(existente));
     }
@@ -83,6 +84,13 @@ public class EditoraService {
                 throw invalido("E-mail inválido ou maior que 150 caracteres");
             }
             existente.setEmail(dto.getEmail());
+        }
+
+        if (dto.getTelefone() != null) {
+            if (!dto.getTelefone().matches(EditoraRequestDTO.TELEFONE_REGEX)) {
+                throw invalido("Telefone inválido. Use o formato (11) 91234-5678");
+            }
+            existente.setTelefone(dto.getTelefone());
         }
 
         return editoraMapper.toDTO(editoraRepository.save(existente));
