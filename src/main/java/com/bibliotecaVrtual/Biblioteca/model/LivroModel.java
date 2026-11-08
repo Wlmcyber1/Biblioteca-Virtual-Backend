@@ -25,6 +25,10 @@ public class LivroModel {
     @JoinColumn(name = "categoria_id", nullable = false)
     private CategoriaModel categoria;
 
+    @ManyToOne //muitos livros podem ser da mesma editora; opcional
+    @JoinColumn(name = "editora_id")
+    private EditoraModel editora;
+
     private String descricao;
     private Integer anoPublicacao;
     private String urlArquivo;

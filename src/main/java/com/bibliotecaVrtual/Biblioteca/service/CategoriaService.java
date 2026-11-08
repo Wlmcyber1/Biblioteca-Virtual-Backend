@@ -67,6 +67,6 @@ public class CategoriaService {
     }
 
     private String normalizarNome(String nome) {
-        return nome.trim().replaceAll("\s+", " ");
+        return nome.trim().replaceAll("\\s+", " ");
     }
 }

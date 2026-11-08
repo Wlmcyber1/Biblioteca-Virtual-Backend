@@ -61,18 +61,21 @@ public class AutorService {
     }
 
     //PATCH -> altera só os campos enviados
+    //no PATCH não tem @Valid (campos podem vir nulos), então as regras de tamanho são barradas aqui
     public AutorResponseDTO atualizarPorId(Long id, AutorRequestDTO dto) {
         AutorModel autorExistente = buscarAutorOuErro(id);
 
         if (dto.getNome() != null) {
-            //no PATCH não tem @Valid, então o nome em branco é barrado aqui
-            if (dto.getNome().isBlank()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O nome não pode ficar em branco");
+            if (dto.getNome().isBlank() || dto.getNome().length() > 150) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O nome deve ter de 1 a 150 caracteres");
             }
             autorExistente.setNome(dto.getNome());
         }
 
         if (dto.getNacionalidade() != null) {
+            if (dto.getNacionalidade().length() > 100) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A nacionalidade deve ter no máximo 100 caracteres");
+            }
             autorExistente.setNacionalidade(dto.getNacionalidade());
         }
 
