@@ -3,6 +3,8 @@ package com.bibliotecaVrtual.Biblioteca.controller;
 import com.bibliotecaVrtual.Biblioteca.dto.CategoriaDTO.CategoriaRequestDTO;
 import com.bibliotecaVrtual.Biblioteca.dto.CategoriaDTO.CategoriaResponseDTO;
 import com.bibliotecaVrtual.Biblioteca.service.CategoriaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,32 +15,38 @@ import java.util.List;
 @RestController
 @RequestMapping("/categorias")
 @RequiredArgsConstructor
+@Tag(name = "Categorias", description = "Cadastro das categorias dos livros")
 public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Cadastra uma categoria (nome único)")
     public CategoriaResponseDTO cadastrar(@Valid @RequestBody CategoriaRequestDTO dto) {
         return categoriaService.cadastrar(dto);
     }
 
     @GetMapping
+    @Operation(summary = "Lista todas as categorias")
     public List<CategoriaResponseDTO> listarTodas() {
         return categoriaService.listarTodas();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Busca uma categoria pelo id")
     public CategoriaResponseDTO buscarPorId(@PathVariable Long id) {
         return categoriaService.buscarPorId(id);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Altera o nome da categoria")
     public CategoriaResponseDTO atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
         return categoriaService.atualizar(id, dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Exclui uma categoria (409 se tiver livros)")
     public void excluir(@PathVariable Long id) {
         categoriaService.excluir(id);
     }

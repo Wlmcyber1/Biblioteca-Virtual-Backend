@@ -39,7 +39,7 @@ public class EditoraService {
     }
 
     //DELETE
-    //se a editora tiver materiais ligados, o banco rejeita e o GlobalExceptionHandler devolve 409
+    //se a editora tiver livros ligados, o banco rejeita (V11) e o GlobalExceptionHandler devolve 409
     public void excluir(Long id) {
         if (!editoraRepository.existsById(id)) {
             throw naoEncontrada();
