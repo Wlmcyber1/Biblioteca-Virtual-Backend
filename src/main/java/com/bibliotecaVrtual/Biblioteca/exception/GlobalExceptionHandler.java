@@ -39,6 +39,7 @@ public class GlobalExceptionHandler {
     //nome da tabela -> como aparece na mensagem. Ao criar uma tabela nova, é só adicionar aqui.
     private static final Map<String, String> NOMES_AMIGAVEIS = Map.of(
             "tb_livro", "livros",
+            "tb_livro_autor", "livros",
             "tb_material", "materiais",
             "tb_autor", "autores",
             "tb_categoria", "categorias",
